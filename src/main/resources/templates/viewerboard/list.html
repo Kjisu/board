@@ -8,7 +8,111 @@
 <body>
 
 <th:block th:fragment="content">
+
+    <!--제목-->
     <h1 class="mt-4">시청자 게시판</h1>
+
+    <!--목록 출력-->
+    <table class="table table-striped">
+        <tr>
+            <th scope="col">NO</th>
+            <th scope="col">제목</th>
+            <th scope="col">작성자</th>
+            <th scope="col">작성일</th>
+            <th scope="col">조회수</th>
+        </tr>
+        <tr th:each="dto:${result.dtoList}">
+            <td>[[${dto.sno}]]</td>
+            <td><!--조회페이지 : 목록 페이지로 다시 돌아오는 것을 염두해둬야 하기 때문에 page,type,keyword와 같은 페이징 정보도 같이 넘긴다-->
+                <a th:href="@{/viewerboard/read(sno=${dto.sno}, page=${result.page}, type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword})}">[[${dto.title}]]</a>
+            </td>
+            <td>[[${dto.writer}]]</td>
+            <td th:text="${#temporals.format(dto.regDate,'yyyy/MM/dd')}"></td>
+            <td th:text="${dto.cnum}"></td>
+        </tr>
+    </table>
+
+
+    <!--페이지 번호 출력 -->
+    <ul class="pagination h-100 justify-content-center align-items-center">
+        <li class="page-item" th:if="${result.prev}">
+            <a class="page-link" th:href="@{/viewerboard/list(page=${result.start-1},type=${pageRequestDTO.type},keyword=${pageRequestDTO.keyword})}" tabindex="-1">Prev</a>
+        </li>
+        <li th:class=" 'page-item ' + ${result.page == page? 'active':''} " th:each="page:${result.pageList}">
+            <a class="page-link" th:href="@{/viewerboard/list(page=${page}, type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword})}">[[${page}]]</a>
+        </li>
+        <li class="page-item" th:if="${result.next}">
+            <a class="page-link" th:href="@{/viewerboard/list(page=${result.end+1},type=${pageRequestDTO.type},keyword=${pageRequestDTO.keyword})}">Next</a>
+        </li>
+    </ul>
+
+
+    <!--게시글 등록 버튼-->
+    <div>
+        <a th:href="@{/viewerboard/register}">
+            <button type="button" class="btn btn-outline-primary">게시글 작성</button>
+        </a>
+    </div>
+
+    <!--검색 영역 -->
+    <form action="/viewerboard/list" method="get" id="searchForm">
+        <div class="input-group">
+            <!--<input type="hidden" name="page" value="1">-->
+            <div class="input-group-prepend">
+                <select name="type" class="custom-select">
+                    <option th:selected="${pageRequestDTO.type == null}">==========</option>
+                    <option value="t" th:selected="${pageRequestDTO.type == 't'}">제목</option>
+                    <option value="w" th:selected="${pageRequestDTO.type == 'w'}">글쓴이</option>
+                    <option value="c" th:selected="${pageRequestDTO.type == 'c'}">내용</option>
+                    <option value="tc" th:selected="${pageRequestDTO.type == 'tc'}">제목+내용</option>
+                    <option value="tcw" th:selected="${pageRequestDTO.type == 'tcw'}">제목+내용+작성자</option>
+                </select>
+            </div>
+            <input type="text" name="keyword" th:value="${pageRequestDTO.keyword}" class="form-control">
+            <div class="input-group-append" id="button-addon4">
+                <button type="button" class="btn btn-outline-secondary btn-search">검색</button>
+                <button type="button" class="btn btn-outline-secondary btn-clear">취소</button>
+            </div>
+        </div>
+    </form>
+
+    <!--JS-->
+    <script th:inline="javascript">
+
+    $(document).ready(function(){
+
+        //게시글 등록된 후,
+        var msg = [[${msg}]];
+
+        console.log("등록된 게시글의 번호 = "+msg);
+
+        if(msg){
+            //$(".modal").modal();// 안뜸..
+            alert("등록 완료!");
+        }
+
+        //게시글 삭제 후,
+        var delMsg = [[${delMsg}]];
+        console.log("삭제된 게시글 번호 = "+delMsg);
+        if(delMsg){
+            alert("게시글 삭제 완료!");
+        }
+
+
+    });
+
+        //검색 버튼
+        var searchForm = $("#searchForm");
+
+        $('.btn-search').click(function(){
+            searchForm.submit();
+        });//end click()
+
+        $('.btn-clear').click(function(){
+            searchForm.empty().submit();
+        });//end click()
+    </script>
+
 </th:block>
 
 

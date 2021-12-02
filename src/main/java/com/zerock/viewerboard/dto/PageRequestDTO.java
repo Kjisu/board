@@ -25,7 +25,7 @@ public class PageRequestDTO {
     //처음에는 임의로 페이지 번호, 페이지 당 게시글 수 지정해야
     public PageRequestDTO() {
         this.page = 1;
-        this.page = 10;
+        this.size = 10;
     }
 
     //Pageable 객체 생성 - jpa로 작업할 때 필요함
