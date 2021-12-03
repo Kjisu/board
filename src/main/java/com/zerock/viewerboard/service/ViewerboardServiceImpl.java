@@ -1,8 +1,11 @@
 package com.zerock.viewerboard.service;
 
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.zerock.viewerboard.dto.PageRequestDTO;
 import com.zerock.viewerboard.dto.PageResultDTO;
 import com.zerock.viewerboard.dto.ViewerboardDTO;
+import com.zerock.viewerboard.entity.QViewerboard;
 import com.zerock.viewerboard.entity.Viewerboard;
 import com.zerock.viewerboard.repository.ViewerboardRepository;
 import lombok.RequiredArgsConstructor;
@@ -40,8 +43,8 @@ public class ViewerboardServiceImpl implements ViewerboardService {
         return viewerboard.getSno();
     }
 
-    ////////////////////////////////////////////////////////////////////////목록 데이터 가져오기
-    @Override
+    ////////////////////////////////////////////////////////////////////////목록 데이터 가져오기(검색조건 없을 때)
+ /*   @Override
     public PageResultDTO<ViewerboardDTO,Viewerboard> getList(PageRequestDTO dto) {
 
         log.info("[Service] getList() ...called ");
@@ -56,7 +59,29 @@ public class ViewerboardServiceImpl implements ViewerboardService {
         Function<Viewerboard,ViewerboardDTO> fn = (entity -> entityToDTO(entity));//람다식!!
 
         return new PageResultDTO<>(result,fn);
+    }*/
+
+    ////////////////////////////////////////////////////////////////////////목록 데이터 가져오기(검색조건 있을 때-querydsl사용)
+    @Override
+    public PageResultDTO<ViewerboardDTO,Viewerboard> getList(PageRequestDTO dto) {
+
+        log.info("[Service] getList() ...called ");
+
+        //Pageable 객체 생성
+        Pageable pageable = dto.getPageable(Sort.by("sno").descending());
+
+        //검색 조건 객체 가져오기
+        BooleanBuilder booleanBuilder = getSearch(dto);
+
+        //QuerydslPredicateExecutor 인터페이스의 findAll()를 호출함으로써 쿼리 실행
+        Page<Viewerboard> result = repository.findAll(booleanBuilder, pageable);
+
+        //entity -> dto로의 변환기능을 Function객체에 담기
+        Function<Viewerboard,ViewerboardDTO> fn = (entity -> entityToDTO(entity));//람다식!!
+
+        return new PageResultDTO<>(result,fn);
     }
+
 
     ////////////////////////////////////////////////////////////////////// 조회 데이터 가져오기
     @Override
@@ -90,6 +115,43 @@ public class ViewerboardServiceImpl implements ViewerboardService {
     public void remove(Long sno) {
         log.info("[S] remove()...");
         repository.deleteById(sno);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////// 검색 조건 객체 생성
+    private BooleanBuilder getSearch(PageRequestDTO dto){
+
+        String type = dto.getType();
+        String keyword = dto.getKeyword();
+
+        QViewerboard qViewerboard = QViewerboard.viewerboard;
+        BooleanBuilder booleanBuilder = new BooleanBuilder();
+
+        //조건문1
+        BooleanExpression ex1 = qViewerboard.sno.gt(0L);
+        booleanBuilder.and(ex1);
+
+        //상세 검색 조건(type)이 있는지 확인
+        if(type == null || type.trim().length() == 0){
+            return booleanBuilder;
+        }
+
+        //상세 검색 조건이 있는 경우,
+        BooleanBuilder conditionBuilder = new BooleanBuilder();
+        if(type.contains("t")){
+            conditionBuilder.or(qViewerboard.title.contains(keyword));
+        }
+        if(type.contains("c")){
+            conditionBuilder.or(qViewerboard.content.contains(keyword));
+        }
+        if(type.contains("w")){
+            conditionBuilder.or(qViewerboard.writer.contains(keyword));
+        }
+
+        booleanBuilder.and(conditionBuilder);
+
+        return booleanBuilder;
+
     }
 
 

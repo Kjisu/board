@@ -4,11 +4,12 @@ import com.zerock.viewerboard.entity.Viewerboard;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 
 import java.util.Optional;
 
 
-public interface ViewerboardRepository extends JpaRepository<Viewerboard,Long> {
+public interface ViewerboardRepository extends JpaRepository<Viewerboard,Long>, QuerydslPredicateExecutor<Viewerboard> {
 
     //조회수 증가
     @Query("update Viewerboard v set v.cnum = v.cnum+1 where v.sno = :sno")
