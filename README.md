@@ -1,1 +1,1 @@
-# reviewerboard
+# board
